@@ -35,10 +35,6 @@ func urlAccess(url string) {
 	}
 }
 
-func initKab() {
-
-}
-
 // loginCmd represents the login command
 var loginCmd = &cobra.Command{
 	Args:  cobra.MinimumNArgs(2),
@@ -111,6 +107,12 @@ var loginCmd = &cobra.Command{
 }
 
 func init() {
+	kabConfig = viper.New()
+	if cfgFile != "" {
+		kabConfig.SetConfigName("kabConfig")
+		kabConfig.SetConfigType("yaml")
+
+	}
 	rootCmd.AddCommand(loginCmd)
 
 	// Here you will define your flags and configuration settings.
