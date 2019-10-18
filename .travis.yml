@@ -5,6 +5,9 @@ go:
 
 go_import_path: github.com/kabanero-io/kabanero-command-line
 
+env:
+  - CGO_ENABLED=1
+
 services:
   - docker
 
