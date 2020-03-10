@@ -16,121 +16,117 @@ limitations under the License.
 package cmd
 
 import (
-	"bytes"
-	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"net/http/httputil"
 	"os"
 	"strings"
 	"text/tabwriter"
-	"time"
 
 	"github.com/spf13/cobra"
 )
 
-func messageAndExit(msg string) {
-	Debug.log(msg)
-	fmt.Println(msg)
-	os.Exit(3)
-}
+// func messageAndExit(msg string) {
+// 	Debug.log(msg)
+// 	fmt.Println(msg)
+// 	os.Exit(3)
+// }
 
-func messageandDebugExit(msg string, dbgmsg string) {
-	Debug.log(dbgmsg)
-	fmt.Println(msg)
-	os.Exit(3)
-}
+// func messageandDebugExit(msg string, dbgmsg string) {
+// 	Debug.log(dbgmsg)
+// 	fmt.Println(msg)
+// 	os.Exit(3)
+// }
 
-func getRESTEndpoint(appendValue string) string {
-	return "https://" + cliConfig.GetString(KabURLKey) + "/" + appendValue
-}
+// func getRESTEndpoint(appendValue string) string {
+// 	return "https://" + cliConfig.GetString(KabURLKey) + "/" + appendValue
+// }
 
-func sendHTTPRequest(method string, url string, jsonBody []byte) (*http.Response, error) {
-	tr := &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-	}
-	client := &http.Client{
-		Timeout:   time.Second * 30,
-		Transport: tr,
-	}
+// func sendHTTPRequest(method string, url string, jsonBody []byte) (*http.Response, error) {
+// 	tr := &http.Transport{
+// 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+// 	}
+// 	client := &http.Client{
+// 		Timeout:   time.Second * 30,
+// 		Transport: tr,
+// 	}
 
-	var resp *http.Response
-	var requestBody *bytes.Buffer
-	var req *http.Request
-	var err error
+// 	var resp *http.Response
+// 	var requestBody *bytes.Buffer
+// 	var req *http.Request
+// 	var err error
 
-	// commented out codes have their own handling and are here just for error code tracking
-	serviceErrorCodes := map[int]string{
-		400: "Stack Version not found/version not found/ jwt expired",
-		// 401: "Session expired or invalid certs",
-		// 404: "Unable to reach services endpoint",
-		424: "Kab CR did not specify pipelines",
-		429: "GitHub retry limit exceeded",
-		500: "Internal Server Error",
-		503: "Operator pod is not fully up",
-		539: "CLI has not been configured",
-	}
+// 	// commented out codes have their own handling and are here just for error code tracking
+// 	serviceErrorCodes := map[int]string{
+// 		400: "Stack Version not found/version not found/ jwt expired",
+// 		// 401: "Session expired or invalid certs",
+// 		// 404: "Unable to reach services endpoint",
+// 		424: "Kab CR did not specify pipelines",
+// 		429: "GitHub retry limit exceeded",
+// 		500: "Internal Server Error",
+// 		503: "Operator pod is not fully up",
+// 		539: "CLI has not been configured",
+// 	}
 
-	if jsonBody != nil {
-		requestBody = bytes.NewBuffer(jsonBody)
-		req, err = http.NewRequest(method, url, requestBody)
+// 	if jsonBody != nil {
+// 		requestBody = bytes.NewBuffer(jsonBody)
+// 		req, err = http.NewRequest(method, url, requestBody)
 
-	} else {
-		req, err = http.NewRequest(method, url, nil)
-	}
-	if err != nil {
-		fmt.Print("Problem with the new request")
-		return resp, err
-	}
+// 	} else {
+// 		req, err = http.NewRequest(method, url, nil)
+// 	}
+// 	if err != nil {
+// 		fmt.Print("Problem with the new request")
+// 		return resp, err
+// 	}
 
-	req.Header.Set("Content-Type", "application/json")
-	if !strings.Contains(url, "login") {
-		req.Header.Set("Authorization", "Bearer "+string(cliConfig.GetString("jwt")))
+// 	req.Header.Set("Content-Type", "application/json")
+// 	if !strings.Contains(url, "login") {
+// 		req.Header.Set("Authorization", "Bearer "+string(cliConfig.GetString("jwt")))
 
-		if cliConfig.GetString("jwt") == "" {
-			messageAndExit("Login to your kabanero instance")
-		}
-	}
+// 		if cliConfig.GetString("jwt") == "" {
+// 			messageAndExit("Login to your kabanero instance")
+// 		}
+// 	}
 
-	if verboseHTTP {
-		requestDump, err := httputil.DumpRequest(req, true)
-		if err != nil {
-			fmt.Println(err)
-		}
-		Info.log("requestDump: " + string(requestDump))
-	}
+// 	if verboseHTTP {
+// 		requestDump, err := httputil.DumpRequest(req, true)
+// 		if err != nil {
+// 			fmt.Println(err)
+// 		}
+// 		Info.log("requestDump: " + string(requestDump))
+// 	}
 
-	resp, err = client.Do(req)
-	if err != nil {
-		messageAndExit("No response from url: " + cliConfig.GetString(KabURLKey))
-	}
-	if verboseHTTP {
-		responseDump, err := httputil.DumpResponse(resp, true)
-		if err != nil {
-			fmt.Println(err)
-		}
-		Info.log("responseDump: " + string(responseDump))
-	}
-	if resp.StatusCode == 401 {
-		messageAndExit("Session expired or your token is invalid. Please try logging in again")
-	}
+// 	resp, err = client.Do(req)
+// 	if err != nil {
+// 		messageAndExit("No response from url: " + cliConfig.GetString(KabURLKey))
+// 	}
+// 	if verboseHTTP {
+// 		responseDump, err := httputil.DumpResponse(resp, true)
+// 		if err != nil {
+// 			fmt.Println(err)
+// 		}
+// 		Info.log("responseDump: " + string(responseDump))
+// 	}
+// 	if resp.StatusCode == 401 {
+// 		messageAndExit("Session expired or your token is invalid. Please try logging in again")
+// 	}
 
-	if _, found := serviceErrorCodes[resp.StatusCode]; found {
-		message := make(map[string]interface{})
-		err = json.NewDecoder(resp.Body).Decode(&message)
-		if err != nil {
-			messageAndExit("No Response, check CLI service status")
-		}
-		if message["message"] == nil {
-			messageAndExit("No message in http response")
-		}
-		messageandDebugExit(message["message"].(string), fmt.Sprintf("HTTP Status %d : %s", resp.StatusCode, message["message"].(string)))
-	}
+// 	if _, found := serviceErrorCodes[resp.StatusCode]; found {
+// 		message := make(map[string]interface{})
+// 		err = json.NewDecoder(resp.Body).Decode(&message)
+// 		if err != nil {
+// 			messageAndExit("No Response, check CLI service status")
+// 		}
+// 		if message["message"] == nil {
+// 			messageAndExit("No message in http response")
+// 		}
+// 		messageandDebugExit(message["message"].(string), fmt.Sprintf("HTTP Status %d : %s", resp.StatusCode, message["message"].(string)))
+// 	}
 
-	Debug.log("RESPONSE ", url, " ", resp.StatusCode, " ", http.StatusText(resp.StatusCode))
-	return resp, nil
-}
+// 	Debug.log("RESPONSE ", url, " ", resp.StatusCode, " ", http.StatusText(resp.StatusCode))
+// 	return resp, nil
+// }
 
 // syncCmd represents the sync command
 var syncCmd = &cobra.Command{

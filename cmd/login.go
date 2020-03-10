@@ -40,7 +40,7 @@ func parseKabURL(url string) string {
 }
 
 func is06Compatible() bool {
-	url := getRESTEndpoint("v1/image")
+	url := services.getRESTEndpoint("v1/image")
 	resp, err := sendHTTPRequest("GET", url, nil)
 	if err != nil {
 		Info.logf("kabanero command line service image: CLI service unavailable, %s", err.Error())
