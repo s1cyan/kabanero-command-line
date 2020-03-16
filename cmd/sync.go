@@ -48,7 +48,7 @@ func getRESTEndpoint(appendValue string) string {
 
 func sendHTTPRequest(method string, url string, jsonBody []byte) (*http.Response, error) {
 	tr := &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: SKIPTLS},
 	}
 	client := &http.Client{
 		Timeout:   time.Second * 30,
@@ -113,6 +113,10 @@ func sendHTTPRequest(method string, url string, jsonBody []byte) (*http.Response
 		Info.log("responseDump: " + string(responseDump))
 	}
 	if resp.StatusCode == 401 {
+		if strings.Contains(url, "login") {
+			return resp, err
+		}
+		SKIPTLS = false
 		messageAndExit("Session expired or your token is invalid. Please try logging in again")
 	}
 

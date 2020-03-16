@@ -25,6 +25,7 @@ import (
 	"text/tabwriter"
 
 	"github.com/spf13/cobra"
+	// "github.com/kabanero-io/kabanero-command-line/pkg/util/services"
 )
 
 // The list command gets a set of "stacks" back from the CLI Service.
