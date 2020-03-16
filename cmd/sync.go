@@ -30,6 +30,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var (
+	skipTLSsecurity bool
+)
+
 func messageAndExit(msg string) {
 	Debug.log(msg)
 	fmt.Println(msg)
@@ -47,8 +51,9 @@ func getRESTEndpoint(appendValue string) string {
 }
 
 func sendHTTPRequest(method string, url string, jsonBody []byte) (*http.Response, error) {
+	fmt.Println("SKIP TLS: ", skipTLSsecurity)
 	tr := &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: SKIPTLS},
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: skipTLSsecurity},
 	}
 	client := &http.Client{
 		Timeout:   time.Second * 30,

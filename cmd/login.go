@@ -26,6 +26,17 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"golang.org/x/crypto/ssh/terminal"
+	// "k8s.io/cli-runtime/pkg/genericclioptions"
+)
+
+// type LoginOptions struct {
+// 	Username string
+// 	Password string
+// 	SkipTLS  bool
+// 	genericclioptions.IOStreams
+// }
+var (
+	SKIPTLS bool
 )
 
 type JWTResponse struct {
@@ -111,6 +122,9 @@ var loginCmd = &cobra.Command{
 			}
 		}
 		kabLoginURL = getRESTEndpoint("login")
+		if SKIPTLS {
+			skipTLSsecurity = SKIPTLS
+		}
 
 		requestBody, _ := json.Marshal(map[string]string{"gituser": username, "gitpat": password})
 
@@ -122,6 +136,9 @@ var loginCmd = &cobra.Command{
 		Debug.log("RESPONSE ", kabLoginURL, resp.StatusCode, http.StatusText(resp.StatusCode))
 		if resp.StatusCode == 404 {
 			messageAndExit("The url: " + cliConfig.GetString(KabURLKey) + " is not a valid kabanero url")
+		}
+		if resp.StatusCode == 401 {
+			messageAndExit("The url: " + cliConfig.GetString(KabURLKey) + " is not secure. Either run login with --insecure-skip-tls-verify=false or download the kabanero service pod's self signed cert to your local machine")
 		}
 
 		var data JWTResponse
@@ -140,7 +157,6 @@ var loginCmd = &cobra.Command{
 		}
 
 		if !is06Compatible() {
-
 			url := getRESTEndpoint("logout")
 			resp, err := sendHTTPRequest("POST", url, nil)
 			if err != nil {
@@ -148,6 +164,7 @@ var loginCmd = &cobra.Command{
 			}
 
 			defer resp.Body.Close()
+			SKIPTLS = false
 			cliConfig.Set("jwt", "")
 			err = cliConfig.WriteConfig()
 			if err != nil {
@@ -168,6 +185,7 @@ func init() {
 	rootCmd.AddCommand(loginCmd)
 	loginCmd.Flags().StringP("username", "u", "", "github username")
 	_ = loginCmd.MarkFlagRequired("username")
+	loginCmd.Flags().BoolVar(&SKIPTLS, "insecure-skip-tls-verify", false, "If true, the server's certificate will not be checked for validity. This will make your HTTPS connections insecure")
 	// Here you will define your flags and configuration settings.
 
 	// Cobra supports Persistent Flags which will work for this command
